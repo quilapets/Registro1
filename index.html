@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Club de Amigos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(rgba(20, 45, 20, 0.8), rgba(20, 45, 20, 0.8)), url('https://www.transparenttextures.com/patterns/cubes.png');
+            background-color: #1a2e1a;
+        }
+        .hidden-field { display: none !important; }
+        .brand-bg { background-color: #424242; } 
+        .brand-green-text { color: #A4F13E; }
+        input, select, textarea { border: 2px solid #cbd5e1 !important; background-color: #ffffff !important; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 50; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body class="min-h-screen py-6 px-4">
+
+    <div id="loader" class="loading-overlay flex-col">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p class="mt-2 text-indigo-600 font-bold">Procesando registro...</p>
+    </div>
+
+    <div class="max-w-2xl mx-auto bg-slate-50 rounded-xl shadow-2xl overflow-hidden border border-slate-300">
+        <div class="brand-bg p-8 text-center">
+            <h1 class="brand-green-text text-2xl md:text-3xl font-bold tracking-tight">Club de Amigos 🐾</h1>
+        </div>
+
+        <form id="petForm" class="p-6 space-y-6">
+            <section class="space-y-4">
+                <h2 class="text-sm font-bold text-indigo-700 uppercase border-b-2 border-indigo-100 pb-1">1. Datos del Tutor</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nombre del Tutor</label>
+                        <input type="text" required name="nombre_tutor" placeholder="Ej: Juan Pérez" class="block w-full rounded-lg p-2.5 text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">WhatsApp (11 dígitos)</label>
+                        <input type="text" required name="whatsapp" id="whatsapp" placeholder="569XXXXXXXX" maxlength="11" class="block w-full rounded-lg p-2.5 text-sm outline-none">
+                    </div>
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-sm font-bold text-indigo-700 uppercase border-b-2 border-indigo-100 pb-1">2. Información de la Mascota</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Mascota</label>
+                        <input type="text" required id="inputPetNombre" name="pet_nombre" placeholder="Nombre" class="block w-full rounded-lg p-2.5 text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Especie</label>
+                        <select required name="especie" class="block w-full rounded-lg p-2.5 text-sm outline-none">
+                            <option value="Perro">Perro</option>
+                            <option value="Gato">Gato</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg active:scale-95 transform">
+                ¡Únete al club! 🐾
+            </button>
+        </form>
+
+        <div id="successMessage" class="hidden-field p-12 text-center">
+            <div class="text-6xl mb-4 text-indigo-600 animate-bounce">✨</div>
+            <h2 class="text-2xl font-bold text-gray-800">¡Registro Exitoso!</h2>
+            <p class="text-gray-600 mt-2">Estamos abriendo WhatsApp para conectar contigo...</p>
+        </div>
+    </div>
+
+    <script>
+        // WEBHOOK DE GOOGLE SHEETS
+        const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzMOOpp2jUyXX1oBs_vfCCIvqkEGTT-I1FHfTdCt7crJyHQhN2dT5nDbfQ-2Wzvix2Z-A/exec"; 
+
+        document.getElementById('petForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    body: JSON.stringify(data),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                loader.style.display = 'none';
+                this.classList.add('hidden-field');
+                document.getElementById('successMessage').classList.remove('hidden-field');
+                window.scrollTo(0,0);
+
+                setTimeout(() => {
+                    // REEMPLAZA LAS X CON TU NÚMERO (EJM: 56912345678)
+                    const telefonoTienda = "56986130021"; 
+                    const nombreMascota = document.getElementById('inputPetNombre').value;
+                    const mensaje = encodeURIComponent(`¡Hola! Acabo de registrar a ${nombreMascota} en el Club de Amigos 🐾.`);
+                    window.location.href = `https://wa.me/${telefonoTienda}?text=${mensaje}`;
+                }, 3000);
+
+            } catch (err) {
+                loader.style.display = 'none';
+                alert("Hubo un error al enviar. Intenta de nuevo.");
+            }
+        });
+    </script>
+</body>
+</html>
